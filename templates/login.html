@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - WEB RIS</title>
+    <link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-family:"K2D", sans-serif;
+            background:linear-gradient(135deg,#0b1d45,#13346e);
+        }
+        .login-box{
+            width:100%;
+            max-width:420px;
+            background:#fff;
+            border-radius:24px;
+            padding:32px 28px;
+            box-shadow:0 20px 40px rgba(0,0,0,.25);
+        }
+        h1{
+            margin:0 0 18px;
+            text-align:center;
+            color:#0d214f;
+            font-size:32px;
+            font-weight:800;
+        }
+        .input{
+            width:100%;
+            height:48px;
+            border:1px solid #d7ddeb;
+            border-radius:14px;
+            padding:0 14px;
+            font-size:15px;
+            margin-bottom:14px;
+            font-family:"K2D", sans-serif;
+        }
+        .btn{
+            width:100%;
+            height:48px;
+            border:none;
+            border-radius:14px;
+            background:#1677ff;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+            cursor:pointer;
+            font-family:"K2D", sans-serif;
+        }
+        .btn:hover{
+            background:#0f63d6;
+        }
+        .flash{
+            background:#ffe3e3;
+            color:#b42318;
+            border-radius:12px;
+            padding:10px 12px;
+            margin-bottom:14px;
+            font-size:14px;
+            font-weight:700;
+        }
+    </style>
+</head>
+<body>
+    <form class="login-box" method="POST">
+        <h1>WEB RIS</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <input class="input" type="text" name="username" placeholder="ชื่อผู้ใช้" required>
+        <input class="input" type="password" name="password" placeholder="รหัสผ่าน" required>
+        <button class="btn" type="submit">เข้าสู่ระบบ</button>
+    </form>
+</body>
+</html>
