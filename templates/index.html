@@ -212,6 +212,7 @@ body{
     align-items:flex-start;
     padding:18px 20px 24px;
     overflow:auto;
+    min-width:0;
 }
 
 .container{
@@ -222,6 +223,7 @@ body{
     text-align:center;
     box-shadow:0 20px 40px rgba(0,0,0,0.28);
     width:460px;
+    max-width:100%;
     color:#111;
     position:relative;
     overflow:hidden;
@@ -337,6 +339,7 @@ h1{
     display:block;
     margin-left:auto;
     margin-right:auto;
+    background:#eee;
 }
 
 .button-group{
@@ -544,35 +547,117 @@ h1{
     padding:20px 10px;
 }
 
+/* จอขนาดกลาง: ให้แถบขวาลงไปอยู่ด้านล่าง ไม่ซ่อน */
 @media (max-width: 1200px){
+    body{
+        display:grid;
+        grid-template-columns:230px 1fr;
+        grid-template-areas:
+            "sidebar main"
+            "sidebar right";
+    }
+
+    .sidebar{
+        grid-area:sidebar;
+        min-height:100vh;
+        width:230px;
+    }
+
+    .main{
+        grid-area:main;
+        width:100%;
+    }
+
     .right-panel{
-        display:none;
+        grid-area:right;
+        width:100%;
+        min-height:auto;
+        border-left:none;
+        border-top:1px solid rgba(255,255,255,0.06);
+        box-shadow:none;
+        background:linear-gradient(180deg,#102754 0%, #0a1635 100%);
     }
 }
 
+/* จอมือถือ: เรียงลงมาให้เห็นครบทุกส่วน */
 @media (max-width: 900px){
     body{
+        display:flex;
         flex-direction:column;
     }
 
     .sidebar{
         width:100%;
         min-height:auto;
+        border-right:none;
+        border-bottom:1px solid rgba(255,255,255,0.06);
     }
 
     .main{
+        width:100%;
         padding-top:10px;
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    .right-panel{
+        width:100%;
+        min-height:auto;
+        border-left:none;
+        border-top:1px solid rgba(255,255,255,0.06);
     }
 
     .container{
         width:100%;
-        max-width:460px;
+        max-width:520px;
+        margin-left:auto;
+        margin-right:auto;
     }
 
     .top-user-bar{
         position:static;
         margin:12px;
         justify-content:center;
+        flex-wrap:wrap;
+    }
+}
+
+/* จอเล็กมาก */
+@media (max-width: 560px){
+    h1{
+        font-size:30px;
+    }
+
+    .container{
+        padding:22px 16px 20px;
+        border-radius:22px;
+    }
+
+    .percent-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .percent-card{
+        min-height:110px;
+        border-radius:20px;
+    }
+
+    .percent-card .value{
+        font-size:36px;
+    }
+
+    #gameImage{
+        width:100%;
+        max-width:300px;
+    }
+
+    .search-wrap{
+        flex-direction:column;
+    }
+
+    .search-btn{
+        width:100%;
     }
 }
 </style>
@@ -645,11 +730,8 @@ h1{
 <script>
 const lockedShop = "PG SOFT";
 
-const gameImages = [
-{% for img in images %}
-    "{{ img }}",
-{% endfor %}
-];
+const gameImages = {{ images | tojson }};
+const initialImage = {{ image | tojson }};
 
 const shops = [
     "SOZA","SNOK","ZOCOOL","FIWFUN","MAFINX","OPPA","MEGARICH88","MAXMO",
@@ -658,7 +740,7 @@ const shops = [
 ];
 
 let selectedShop = lockedShop;
-let selectedGame = "{{ image }}";
+let selectedGame = initialImage;
 let winPercent = 95;
 let freePercent = 20;
 let playerCount = 500;
@@ -825,8 +907,15 @@ function renderShopList(){
     }
 }
 
+function decodeHtmlEntities(text){
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
 function formatGameName(filename) {
-    let name = filename.replace(/\.[^/.]+$/, "");
+    let name = decodeHtmlEntities(filename);
+    name = name.replace(/\.[^/.]+$/, "");
     name = name.replace(/^PGS_/i, "");
     name = name.replace(/_\d+$/, "");
     name = name.replace(/_/g, " ");
@@ -888,7 +977,10 @@ function getStaticUrl(filename){
 
 function applyGameSelection(game, shouldScroll = true){
     selectedGame = game;
-    document.getElementById("gameImage").src = getStaticUrl(game);
+
+    const gameImage = document.getElementById("gameImage");
+    gameImage.src = getStaticUrl(game);
+    gameImage.alt = formatGameName(game);
     document.getElementById("gameName").innerText = formatGameName(game);
 
     const stats = generateRealisticStats();
@@ -935,6 +1027,10 @@ function renderGameList(){
         thumb.className = "game-thumb";
         thumb.src = getStaticUrl(game);
         thumb.alt = formatGameName(game);
+
+        thumb.onerror = function(){
+            this.src = "";
+        };
 
         const info = document.createElement("div");
         info.className = "game-info";
@@ -1037,7 +1133,7 @@ async function copyStyledCard() {
         const game = formatGameName(rawGame);
         const updateTime = formatThaiDate();
 
-        if (!img.complete) {
+        if (!img.complete || img.naturalWidth === 0) {
             alert("รูปยังโหลดไม่เสร็จ กรุณาลองใหม่");
             return;
         }
