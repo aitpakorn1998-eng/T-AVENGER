@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>จัดการ - WEB RIS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:"K2D", sans-serif;
+    background:linear-gradient(135deg,#0b1d45,#13346e);
+    min-height:100vh;
+    color:#fff;
+}
+.layout{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    min-height:100vh;
+}
+.sidebar{
+    background:linear-gradient(180deg,#0d214f 0%, #091631 100%);
+    border-right:1px solid rgba(255,255,255,.08);
+    box-shadow:8px 0 24px rgba(0,0,0,.22);
+}
+.logo{
+    padding:24px 18px;
+    text-align:center;
+    font-size:34px;
+    font-weight:800;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+.nav{padding:18px 12px}
+.nav a{
+    display:block;
+    text-decoration:none;
+    color:#fff;
+    background:rgba(255,255,255,.05);
+    margin-bottom:12px;
+    padding:16px 18px;
+    border-radius:16px;
+    font-weight:800;
+    font-size:18px;
+}
+.nav a.active{
+    background:#ffffff;
+    color:#d91f26;
+}
+.content{
+    padding:18px 22px 24px;
+}
+.topbar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:18px;
+}
+.user-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(8,18,45,0.88);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:10px 14px;
+}
+.logout-btn{
+    text-decoration:none;
+    color:#fff;
+    background:#d91f26;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:800;
+}
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+.panel{
+    background:#f2f2f2;
+    color:#111;
+    border-radius:28px;
+    box-shadow:0 20px 40px rgba(0,0,0,.28);
+    padding:24px;
+}
+.panel h2{
+    margin:0 0 14px;
+    font-size:28px;
+    font-weight:900;
+}
+.input, .select, .file-input{
+    width:100%;
+    height:48px;
+    border:1px solid #d6ddeb;
+    border-radius:14px;
+    padding:0 14px;
+    font-size:15px;
+    font-family:"K2D", sans-serif;
+    margin-bottom:12px;
+}
+.file-input{
+    padding:10px 12px;
+    height:auto;
+    background:#fff;
+}
+.btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 16px;
+    font-size:14px;
+    font-weight:800;
+    color:#fff;
+    cursor:pointer;
+    font-family:"K2D", sans-serif;
+}
+.btn-blue{background:#1677ff}
+.btn-green{background:#28a745}
+.btn-red{background:#d91f26}
+.btn-gray{background:#667085}
+.btn:hover{opacity:.92}
+.flash{
+    background:#e8fff0;
+    color:#146c2e;
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:14px;
+    font-size:14px;
+    font-weight:700;
+}
+.table-wrap{
+    overflow:auto;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    border-radius:16px;
+    overflow:hidden;
+}
+th, td{
+    padding:12px;
+    border-bottom:1px solid #e7ebf3;
+    text-align:left;
+    font-size:14px;
+    vertical-align:top;
+}
+th{
+    background:#edf3ff;
+    color:#14326f;
+    font-weight:800;
+}
+.tag{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#e8efff;
+    color:#15397c;
+    font-weight:800;
+    font-size:12px;
+}
+.file-list{
+    max-height:280px;
+    overflow:auto;
+    background:#fff;
+    border-radius:16px;
+    padding:10px;
+    border:1px solid #e2e8f5;
+}
+.file-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    border-bottom:1px solid #edf1f8;
+}
+.file-item:last-child{border-bottom:none}
+.file-name{
+    word-break:break-word;
+    font-size:14px;
+    font-weight:700;
+}
+.inline-form{
+    margin:0;
+}
+.note{
+    color:#555;
+    font-size:14px;
+    font-weight:700;
+    margin-top:-4px;
+    margin-bottom:12px;
+}
+.check-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
+}
+.check-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:#fff;
+    border:1px solid #d6ddeb;
+    border-radius:12px;
+    padding:10px 12px;
+}
+.row-form{
+    display:grid;
+    grid-template-columns:110px 1.2fr 150px 1.2fr 110px;
+    gap:10px;
+    align-items:start;
+}
+.row-form .input,
+.row-form .select{
+    margin-bottom:0;
+    height:42px;
+}
+.visibility-box{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+.visibility-box label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:#f5f7fb;
+    border:1px solid #dce3f0;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:13px;
+    font-weight:700;
+}
+.small-text{
+    font-size:12px;
+    color:#666;
+    font-weight:700;
+}
+.section-title{
+    margin:0 0 10px;
+    font-size:18px;
+    font-weight:900;
+    color:#14326f;
+}
+@media (max-width: 1300px){
+    .row-form{
+        grid-template-columns:1fr;
+    }
+}
+@media (max-width: 1000px){
+    .grid{grid-template-columns:1fr}
+}
+@media (max-width: 900px){
+    .layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo">WEB RIS</div>
+        <div class="nav">
+            {% if show_random %}
+            <a href="{{ url_for('random_page') }}">สุ่มเกม</a>
+            {% endif %}
+
+            {% if is_admin and show_manage %}
+            <a href="{{ url_for('manage_page') }}" class="active">จัดการ</a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main class="content">
+        <div class="topbar">
+            <div class="user-box">
+                <div>ผู้ใช้: {{ username }}</div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">ออกจากระบบ</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid">
+            <div class="panel">
+                <h2>เพิ่มผู้ใช้</h2>
+                <form method="POST" action="{{ url_for('add_user') }}">
+                    <input class="input" type="text" name="username" placeholder="ชื่อผู้ใช้ใหม่" required>
+                    <input class="input" type="text" name="password" placeholder="รหัสผ่านเริ่มต้น" required>
+
+                    <select class="select" name="is_admin">
+                        <option value="0">USER ปกติ</option>
+                        <option value="1">ADMIN</option>
+                    </select>
+
+                    <div class="check-grid">
+                        <label class="check-item">
+                            <input type="checkbox" name="show_random" value="1" checked>
+                            <span>แสดงหัวข้อสุ่มเกม</span>
+                        </label>
+
+                        <label class="check-item">
+                            <input type="checkbox" name="show_table" value="1" checked>
+                            <span>แสดงหัวข้อตาราง</span>
+                        </label>
+
+                        <label class="check-item">
+                            <input type="checkbox" name="show_manage" value="1">
+                            <span>แสดงหัวข้อจัดการ</span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-blue" type="submit">เพิ่มผู้ใช้</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>รีเซ็ตรหัสผ่าน</h2>
+                <form method="POST" action="{{ url_for('reset_password') }}">
+                    <select class="select" name="user_id" required>
+                        <option value="">เลือกผู้ใช้</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="input" type="text" name="new_password" placeholder="รหัสผ่านใหม่" required>
+                    <button class="btn btn-red" type="submit">รีเซ็ตรหัสผ่าน</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>อัปโหลดรูปเกม</h2>
+                <div class="note">เลือกรูปได้หลายไฟล์</div>
+                <form method="POST" action="{{ url_for('upload_game') }}" enctype="multipart/form-data">
+                    <input class="file-input" type="file" name="game_files" accept=".png,.jpg,.jpeg,.webp,.gif" multiple required>
+                    <button class="btn btn-green" type="submit">อัปโหลดรูปเกม</button>
+                </form>
+
+                <h2 style="margin-top:24px;">รายการรูปเกม</h2>
+                <div class="file-list">
+                    {% if game_images %}
+                        {% for file in game_images %}
+                            <div class="file-item">
+                                <div class="file-name">{{ file }}</div>
+                                <form class="inline-form" method="POST" action="{{ url_for('delete_game', filename=file) }}" onsubmit="return confirm('ลบรูปเกมนี้หรือไม่?')">
+                                    <button class="btn btn-red" type="submit">ลบ</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="file-name">ยังไม่มีรูปเกม</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>อัปโหลดรูปโบนัส</h2>
+                <div class="note">เลือกรูปได้หลายไฟล์</div>
+                <form method="POST" action="{{ url_for('upload_bonus') }}" enctype="multipart/form-data">
+                    <input class="file-input" type="file" name="bonus_files" accept=".png,.jpg,.jpeg,.webp,.gif" multiple required>
+                    <button class="btn btn-green" type="submit">อัปโหลดรูปโบนัส</button>
+                </form>
+
+                <h2 style="margin-top:24px;">รายการรูปโบนัส</h2>
+                <div class="file-list">
+                    {% if bonus_images %}
+                        {% for file in bonus_images %}
+                            <div class="file-item">
+                                <div class="file-name">{{ file }}</div>
+                                <form class="inline-form" method="POST" action="{{ url_for('delete_bonus', filename=file) }}" onsubmit="return confirm('ลบรูปโบนัสนี้หรือไม่?')">
+                                    <button class="btn btn-red" type="submit">ลบ</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="file-name">ยังไม่มีรูปโบนัส</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="panel" style="grid-column:1 / -1;">
+                <h2>แก้ไขข้อมูลผู้ใช้</h2>
+                <div class="small-text" style="margin-bottom:12px;">
+                    แก้ชื่อผู้ใช้, เปลี่ยนสิทธิ์, และเปิด/ปิดการมองเห็นหัวข้อได้จากตรงนี้
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:90px;">ID</th>
+                                <th>แก้ไขข้อมูล</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <div><strong>{{ user.id }}</strong></div>
+                                    <div style="margin-top:8px;">
+                                        {% if user.is_admin %}
+                                            <span class="tag">ADMIN</span>
+                                        {% else %}
+                                            <span class="tag">USER</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('update_user') }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                                        <div class="row-form">
+                                            <div>
+                                                <div class="section-title">ชื่อผู้ใช้</div>
+                                                <input class="input" type="text" name="username" value="{{ user.username }}" required>
+                                            </div>
+
+                                            <div>
+                                                <div class="section-title">สิทธิ์</div>
+                                                <select class="select" name="is_admin">
+                                                    <option value="0" {% if not user.is_admin %}selected{% endif %}>USER</option>
+                                                    <option value="1" {% if user.is_admin %}selected{% endif %}>ADMIN</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <div class="section-title">การมองเห็นหัวข้อ</div>
+                                                <div class="visibility-box">
+                                                    <label>
+                                                        <input type="checkbox" name="show_random" value="1" {% if user.show_random %}checked{% endif %}>
+                                                        <span>สุ่มเกม</span>
+                                                    </label>
+
+                                                    <label>
+                                                        <input type="checkbox" name="show_table" value="1" {% if user.show_table %}checked{% endif %}>
+                                                        <span>ตาราง</span>
+                                                    </label>
+
+                                                    <label>
+                                                        <input type="checkbox" name="show_manage" value="1" {% if user.show_manage %}checked{% endif %}>
+                                                        <span>จัดการ</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="section-title">หมายเหตุ</div>
+                                                <div class="small-text">
+                                                    {% if user.id == current_user_id %}
+                                                        บัญชีที่กำลังใช้งานอยู่ จะไม่สามารถปิดหัวข้อจัดการหรือเอาสิทธิ์แอดมินออกได้
+                                                    {% else %}
+                                                        แก้ไขได้ตามต้องการ
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="section-title">บันทึก</div>
+                                                <button class="btn btn-blue" type="submit">บันทึก</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>
