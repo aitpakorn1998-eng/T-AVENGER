@@ -2,6 +2,8 @@ import os
 import sqlite3
 import secrets
 from functools import wraps
+
+import requests
 from flask import (
     Flask, render_template, request, redirect,
     url_for, session, flash
@@ -22,6 +24,38 @@ ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
 os.makedirs(GAME_UPLOAD_DIR, exist_ok=True)
 os.makedirs(BONUS_UPLOAD_DIR, exist_ok=True)
+
+# ใช้ชื่อไทยให้ตรงกับหน้าเว็บ
+THAI_BANKS = [
+    "กสิกรไทย",
+    "ไทยพาณิชย์",
+    "กรุงไทย",
+    "ทหารไทย",
+    "กรุงเทพ",
+    "กรุงศรี",
+    "ออมสิน",
+    "ธ.ก.ส.",
+    "เกียรตินาคิน",
+    "ยูโอบี",
+    "ซีไอเอ็มบี",
+]
+
+BANK_CODE_MAP = {
+    "กสิกรไทย": "KBANK",
+    "ไทยพาณิชย์": "SCB",
+    "กรุงไทย": "KTB",
+    "ทหารไทย": "TTB",
+    "กรุงเทพ": "BBL",
+    "กรุงศรี": "BAY",
+    "ออมสิน": "GSB",
+    "ธ.ก.ส.": "BAAC",
+    "เกียรตินาคิน": "KKP",
+    "ยูโอบี": "UOB",
+    "ซีไอเอ็มบี": "CIMB",
+}
+
+VERIFY_API_URL = "https://api.usun.cash/api/bank/verify"
+VERIFY_PARTNER_ID = 140
 
 
 def get_db():
@@ -67,6 +101,10 @@ def get_bonus_images():
     return get_files_from(BONUS_UPLOAD_DIR)
 
 
+def normalize_account_number(account_number):
+    return "".join(ch for ch in (account_number or "") if ch.isdigit())
+
+
 def init_db():
     conn = get_db()
     cur = conn.cursor()
@@ -93,6 +131,23 @@ def init_db():
 
     if "show_manage" not in columns:
         cur.execute("ALTER TABLE users ADD COLUMN show_manage INTEGER NOT NULL DEFAULT 0")
+
+    if "show_transfer_check" not in columns:
+        cur.execute("ALTER TABLE users ADD COLUMN show_transfer_check INTEGER NOT NULL DEFAULT 1")
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS bank_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            bank_name TEXT NOT NULL,
+            account_number TEXT NOT NULL,
+            account_name TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_bank_account_unique
+        ON bank_accounts(bank_name, account_number)
+    """)
 
     default_users = [
         ("Admin1", "7Kf2Qp91"),
@@ -121,8 +176,8 @@ def init_db():
             cur.execute("""
                 INSERT INTO users (
                     username, password_hash, is_admin, is_owner,
-                    show_random, show_manage
-                ) VALUES (?, ?, 1, 0, 1, 0)
+                    show_random, show_manage, show_transfer_check
+                ) VALUES (?, ?, 1, 0, 1, 0, 1)
             """, (username, generate_password_hash(password)))
         else:
             cur.execute("""
@@ -130,7 +185,8 @@ def init_db():
                 SET is_admin = 1,
                     is_owner = 0,
                     show_random = 1,
-                    show_manage = 0
+                    show_manage = 0,
+                    show_transfer_check = 1
                 WHERE username = ?
             """, (username,))
 
@@ -144,8 +200,8 @@ def init_db():
         cur.execute("""
             INSERT INTO users (
                 username, password_hash, is_admin, is_owner,
-                show_random, show_manage
-            ) VALUES (?, ?, 1, 1, 1, 1)
+                show_random, show_manage, show_transfer_check
+            ) VALUES (?, ?, 1, 1, 1, 1, 1)
         """, (owner_username, generate_password_hash(owner_password)))
     else:
         cur.execute("""
@@ -153,7 +209,8 @@ def init_db():
             SET is_admin = 1,
                 is_owner = 1,
                 show_random = 1,
-                show_manage = 1
+                show_manage = 1,
+                show_transfer_check = 1
             WHERE username = ?
         """, (owner_username,))
 
@@ -184,11 +241,14 @@ def refresh_session_user():
     session["is_owner"] = bool(user["is_owner"])
     session["show_random"] = bool(user["show_random"])
     session["show_manage"] = bool(user["show_manage"])
+    session["show_transfer_check"] = bool(user["show_transfer_check"])
 
 
 def first_allowed_page():
     if session.get("show_random"):
         return url_for("random_page")
+    if session.get("show_transfer_check"):
+        return url_for("transfer_check_page")
     if session.get("show_manage"):
         return url_for("manage_page")
     return url_for("logout")
@@ -220,6 +280,22 @@ def manage_access_required(func):
     return wrapper
 
 
+def transfer_check_access_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+
+        refresh_session_user()
+
+        if not session.get("show_transfer_check"):
+            flash("บัญชีนี้ถูกปิดการมองเห็นหัวข้อตรวจสอบชื่อบัญชี")
+            return redirect(first_allowed_page())
+
+        return func(*args, **kwargs)
+    return wrapper
+
+
 def render_common(template_name, **kwargs):
     refresh_session_user()
     return render_template(
@@ -229,9 +305,102 @@ def render_common(template_name, **kwargs):
         is_owner=session.get("is_owner", False),
         show_random=session.get("show_random", True),
         show_manage=session.get("show_manage", False),
+        show_transfer_check=session.get("show_transfer_check", True),
         current_user_id=session.get("user_id"),
+        thai_banks=THAI_BANKS,
         **kwargs
     )
+
+
+def verify_account_name(bank_name, account_number):
+    bank_code = BANK_CODE_MAP.get(bank_name)
+    if not bank_code:
+        return {
+            "success": False,
+            "account_name": "",
+            "message": "ไม่พบรหัสธนาคารนี้ในระบบ"
+        }
+
+    # รูปแบบ request ตามที่คุณส่งมาก่อนหน้า
+    payload = {
+        "BankCode": bank_code,
+        "AccountNumber": account_number,
+        "PartnerID": VERIFY_PARTNER_ID
+    }
+
+    try:
+        response = requests.post(
+            VERIFY_API_URL,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            timeout=15
+        )
+
+        raw_text = response.text
+        try:
+            data = response.json()
+        except ValueError:
+            return {
+                "success": False,
+                "account_name": "",
+                "message": f"API ตอบกลับไม่ใช่ JSON: {raw_text[:200]}"
+            }
+
+        account_name = (
+            data.get("fullname")
+            or data.get("account_name")
+            or data.get("accountName")
+            or data.get("name")
+            or data.get("data", {}).get("fullname")
+            or data.get("data", {}).get("account_name")
+            or data.get("data", {}).get("accountName")
+            or data.get("data", {}).get("name")
+            or ""
+        )
+
+        success = bool(data.get("success")) and bool(account_name)
+        message = (
+            data.get("errorMessage")
+            or data.get("message")
+            or data.get("msg")
+            or ""
+        )
+
+        if response.status_code != 200:
+            return {
+                "success": False,
+                "account_name": "",
+                "message": f"API status {response.status_code}: {message or raw_text[:200]}"
+            }
+
+        if not account_name:
+            return {
+                "success": False,
+                "account_name": "",
+                "message": message or "ไม่พบชื่อบัญชีจาก API"
+            }
+
+        return {
+            "success": success,
+            "account_name": account_name,
+            "message": message
+        }
+
+    except requests.exceptions.Timeout:
+        return {
+            "success": False,
+            "account_name": "",
+            "message": "เชื่อมต่อ API หมดเวลา"
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "account_name": "",
+            "message": f"เชื่อมต่อ API ไม่สำเร็จ: {e}"
+        }
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -261,6 +430,7 @@ def login():
             session["is_owner"] = bool(user["is_owner"])
             session["show_random"] = bool(user["show_random"])
             session["show_manage"] = bool(user["show_manage"])
+            session["show_transfer_check"] = bool(user["show_transfer_check"])
             return redirect(first_allowed_page())
 
         flash("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
@@ -299,24 +469,69 @@ def random_page():
     )
 
 
+@app.route("/transfer-check", methods=["GET", "POST"])
+@transfer_check_access_required
+def transfer_check_page():
+    result = None
+    input_bank = ""
+    input_account_number = ""
+
+    if request.method == "POST":
+        input_bank = request.form.get("bank_name", "").strip()
+        input_account_number = request.form.get("account_number", "").strip()
+
+        normalized = normalize_account_number(input_account_number)
+
+        if not input_bank or not normalized:
+            flash("กรุณาเลือกธนาคารและกรอกเลขบัญชี")
+            return redirect(url_for("transfer_check_page"))
+
+        verify_result = verify_account_name(input_bank, normalized)
+
+        result = {
+            "bank_name": input_bank,
+            "account_number": normalized,
+            "account_name": verify_result.get("account_name", ""),
+            "message": verify_result.get("message", ""),
+            "success": verify_result.get("success", False),
+        }
+
+    return render_common(
+        "transfer_check.html",
+        result=result,
+        input_bank=input_bank,
+        input_account_number=input_account_number
+    )
+
+
 @app.route("/manage")
 @manage_access_required
 def manage_page():
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute("""
-        SELECT id, username, is_admin, is_owner, show_random, show_manage
+        SELECT id, username, is_admin, is_owner, show_random, show_manage, show_transfer_check
         FROM users
         ORDER BY id ASC
     """)
     users = cur.fetchall()
+
+    cur.execute("""
+        SELECT id, bank_name, account_number, account_name
+        FROM bank_accounts
+        ORDER BY bank_name ASC, account_number ASC
+    """)
+    bank_accounts = cur.fetchall()
+
     conn.close()
 
     return render_common(
         "manage.html",
         users=users,
         game_images=get_game_images(),
-        bonus_images=get_bonus_images()
+        bonus_images=get_bonus_images(),
+        bank_accounts=bank_accounts
     )
 
 
@@ -328,6 +543,7 @@ def add_user():
     is_admin = 1 if request.form.get("is_admin") == "1" else 0
     show_random = 1 if request.form.get("show_random") == "1" else 0
     show_manage = 1 if request.form.get("show_manage") == "1" else 0
+    show_transfer_check = 1 if request.form.get("show_transfer_check") == "1" else 0
 
     if not username or not password:
         flash("กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบ")
@@ -351,15 +567,16 @@ def add_user():
     cur.execute("""
         INSERT INTO users (
             username, password_hash, is_admin, is_owner,
-            show_random, show_manage
-        ) VALUES (?, ?, ?, ?, ?, ?)
+            show_random, show_manage, show_transfer_check
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         username,
         generate_password_hash(password),
         is_admin,
         is_owner,
         show_random,
-        show_manage
+        show_manage,
+        show_transfer_check
     ))
 
     conn.commit()
@@ -408,6 +625,7 @@ def update_user():
     is_admin = 1 if request.form.get("is_admin") == "1" else 0
     show_random = 1 if request.form.get("show_random") == "1" else 0
     show_manage = 1 if request.form.get("show_manage") == "1" else 0
+    show_transfer_check = 1 if request.form.get("show_transfer_check") == "1" else 0
 
     if not user_id or not username:
         flash("ข้อมูลไม่ครบ")
@@ -450,7 +668,7 @@ def update_user():
 
     cur.execute("""
         UPDATE users
-        SET username = ?, is_admin = ?, is_owner = ?, show_random = ?, show_manage = ?
+        SET username = ?, is_admin = ?, is_owner = ?, show_random = ?, show_manage = ?, show_transfer_check = ?
         WHERE id = ?
     """, (
         username,
@@ -458,6 +676,7 @@ def update_user():
         is_owner,
         show_random,
         show_manage,
+        show_transfer_check,
         user_id
     ))
 
@@ -545,10 +764,62 @@ def delete_bonus(filename):
     return redirect(url_for("manage_page"))
 
 
+@app.route("/manage/add-bank-account", methods=["POST"])
+@manage_access_required
+def add_bank_account():
+    bank_name = request.form.get("bank_name", "").strip()
+    account_number = normalize_account_number(request.form.get("account_number", "").strip())
+    account_name = request.form.get("account_name", "").strip()
+
+    if not bank_name or not account_number or not account_name:
+        flash("กรุณากรอกธนาคาร เลขบัญชี และชื่อบัญชีให้ครบ")
+        return redirect(url_for("manage_page"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id FROM bank_accounts
+        WHERE bank_name = ? AND account_number = ?
+    """, (bank_name, account_number))
+    existing = cur.fetchone()
+
+    if existing:
+        cur.execute("""
+            UPDATE bank_accounts
+            SET account_name = ?
+            WHERE bank_name = ? AND account_number = ?
+        """, (account_name, bank_name, account_number))
+        flash("อัปเดตชื่อบัญชีเรียบร้อย")
+    else:
+        cur.execute("""
+            INSERT INTO bank_accounts (bank_name, account_number, account_name)
+            VALUES (?, ?, ?)
+        """, (bank_name, account_number, account_name))
+        flash("เพิ่มบัญชีในระบบจัดการเรียบร้อย")
+
+    conn.commit()
+    conn.close()
+    return redirect(url_for("manage_page"))
+
+
+@app.route("/manage/delete-bank-account/<int:account_id>", methods=["POST"])
+@manage_access_required
+def delete_bank_account(account_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM bank_accounts WHERE id = ?", (account_id,))
+    conn.commit()
+    conn.close()
+    flash("ลบบัญชีแล้ว")
+    return redirect(url_for("manage_page"))
+
+
 with app.app_context():
     init_db()
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
