@@ -493,14 +493,18 @@ h1{
     <aside class="sidebar">
         <div class="logo" id="shopTitle">WEB RIS</div>
         <div class="nav">
-    {% if show_random %}
-    <a href="{{ url_for('random_page') }}" class="{% if request.endpoint == 'random_page' %}active{% endif %}">สุ่มเกม</a>
-    {% endif %}
+            {% if show_random %}
+            <a href="{{ url_for('random_page') }}" class="{% if request.endpoint == 'random_page' %}active{% endif %}">สุ่มเกม</a>
+            {% endif %}
 
-    {% if is_admin and show_manage %}
-    <a href="{{ url_for('manage_page') }}" class="{% if request.endpoint == 'manage_page' %}active{% endif %}">จัดการ</a>
-    {% endif %}
-</div>
+            {% if show_transfer_check %}
+            <a href="{{ url_for('transfer_check_page') }}" class="{% if request.endpoint == 'transfer_check_page' %}active{% endif %}">ลองโอน</a>
+            {% endif %}
+
+            {% if is_admin and show_manage %}
+            <a href="{{ url_for('manage_page') }}" class="{% if request.endpoint == 'manage_page' %}active{% endif %}">จัดการ</a>
+            {% endif %}
+        </div>
     </aside>
 
     <main class="content">
