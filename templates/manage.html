@@ -267,6 +267,10 @@ th{
             <a href="{{ url_for('random_page') }}">สุ่มเกม</a>
             {% endif %}
 
+            {% if show_transfer_check %}
+            <a href="{{ url_for('transfer_check_page') }}">ลองโอน</a>
+            {% endif %}
+
             {% if is_admin and show_manage %}
             <a href="{{ url_for('manage_page') }}" class="active">จัดการ</a>
             {% endif %}
@@ -308,8 +312,8 @@ th{
                         </label>
 
                         <label class="check-item">
-                            <input type="checkbox" name="show_table" value="1" checked>
-                            <span>แสดงหัวข้อตาราง</span>
+                            <input type="checkbox" name="show_transfer_check" value="1" checked>
+                            <span>แสดงหัวข้อลองโอน</span>
                         </label>
 
                         <label class="check-item">
@@ -387,6 +391,57 @@ th{
             </div>
 
             <div class="panel" style="grid-column:1 / -1;">
+                <h2>เพิ่มบัญชีสำหรับลองโอน</h2>
+                <form method="POST" action="{{ url_for('add_bank_account') }}">
+                    <select class="select" name="bank_name" required>
+                        <option value="">เลือกธนาคาร</option>
+                        {% for bank in thai_banks %}
+                        <option value="{{ bank }}">{{ bank }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="input" type="text" name="account_number" placeholder="เลขบัญชี" required>
+                    <input class="input" type="text" name="account_name" placeholder="ชื่อ-นามสกุลบัญชี" required>
+                    <button class="btn btn-blue" type="submit">บันทึกบัญชี</button>
+                </form>
+
+                <h2 style="margin-top:24px;">รายการบัญชีลองโอน</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:90px;">ID</th>
+                                <th>ธนาคาร</th>
+                                <th>เลขบัญชี</th>
+                                <th>ชื่อบัญชี</th>
+                                <th style="width:120px;">ลบ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if bank_accounts %}
+                                {% for account in bank_accounts %}
+                                <tr>
+                                    <td>{{ account.id }}</td>
+                                    <td>{{ account.bank_name }}</td>
+                                    <td>{{ account.account_number }}</td>
+                                    <td>{{ account.account_name }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('delete_bank_account', account_id=account.id) }}" onsubmit="return confirm('ลบบัญชีนี้หรือไม่?')">
+                                            <button class="btn btn-red" type="submit">ลบ</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">ยังไม่มีข้อมูลบัญชีลองโอน</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel" style="grid-column:1 / -1;">
                 <h2>แก้ไขข้อมูลผู้ใช้</h2>
                 <div class="small-text" style="margin-bottom:12px;">
                     แก้ชื่อผู้ใช้, เปลี่ยนสิทธิ์, และเปิด/ปิดการมองเห็นหัวข้อได้จากตรงนี้
@@ -440,8 +495,8 @@ th{
                                                     </label>
 
                                                     <label>
-                                                        <input type="checkbox" name="show_table" value="1" {% if user.show_table %}checked{% endif %}>
-                                                        <span>ตาราง</span>
+                                                        <input type="checkbox" name="show_transfer_check" value="1" {% if user.show_transfer_check %}checked{% endif %}>
+                                                        <span>ลองโอน</span>
                                                     </label>
 
                                                     <label>
