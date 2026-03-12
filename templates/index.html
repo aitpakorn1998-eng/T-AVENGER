@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>WEB RIS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:"K2D", sans-serif;
+    background:linear-gradient(135deg,#0b1d45,#13346e);
+    display:flex;
+    min-height:100vh;
+    color:#fff;
+    overflow-x:hidden;
+}
+
+.top-user-bar{
+    position:fixed;
+    top:12px;
+    right:16px;
+    z-index:999;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(8,18,45,0.88);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;
+    padding:10px 14px;
+    box-shadow:0 10px 22px rgba(0,0,0,0.22);
+}
+
+.user-name{
+    font-size:14px;
+    font-weight:800;
+    color:#fff;
+}
+
+.logout-btn{
+    text-decoration:none;
+    color:#fff;
+    background:#d91f26;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:800;
+}
+
+.logout-btn:hover{
+    background:#b4171d;
+}
+
+.sidebar{
+    width:230px;
+    min-height:100vh;
+    background:linear-gradient(180deg,#0d214f 0%, #0a1635 100%);
+    box-shadow:8px 0 24px rgba(0,0,0,0.28);
+    flex-shrink:0;
+    border-right:1px solid rgba(255,255,255,0.06);
+    overflow:auto;
+}
+
+.sidebar-header{
+    color:#ffffff;
+    text-align:center;
+    font-size:24px;
+    font-weight:800;
+    padding:24px 12px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    letter-spacing:.5px;
+}
+
+#shopList{
+    padding:14px 10px 20px;
+}
+
+.shop-group-title{
+    font-size:12px;
+    font-weight:800;
+    color:rgba(255,255,255,0.72);
+    padding:6px 8px 8px;
+    letter-spacing:.6px;
+}
+
+.shop-divider{
+    position:relative;
+    margin:10px 2px 14px;
+    height:18px;
+}
+
+.shop-divider::before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    top:50%;
+    height:1px;
+    background:rgba(255,255,255,0.16);
+    transform:translateY(-50%);
+}
+
+.shop-divider span{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#0d214f 0%, #0a1635 100%);
+    padding:0 10px;
+    font-size:11px;
+    font-weight:800;
+    color:rgba(255,255,255,0.60);
+    white-space:nowrap;
+}
+
+.shop-row{
+    display:flex;
+    align-items:center;
+    margin-bottom:10px;
+    border-radius:16px;
+    overflow:hidden;
+    background:linear-gradient(180deg,#18356f,#11295a);
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+.shop-row.active-row{
+    background:#ffffff;
+    border:1px solid rgba(255,255,255,0.65);
+    box-shadow:0 8px 18px rgba(0,0,0,0.28);
+}
+
+.shop-row.locked-row{
+    background:linear-gradient(180deg,#1a4d98,#123770);
+    border:1px solid rgba(255,255,255,0.12);
+}
+
+.shop-row.locked-row.active-row{
+    background:#ffffff;
+    border:1px solid rgba(255,255,255,0.75);
+}
+
+.star-btn{
+    width:48px;
+    min-width:48px;
+    height:48px;
+    border:none;
+    background:transparent;
+    color:#ffd54a;
+    font-size:20px;
+    cursor:pointer;
+    border-right:1px solid rgba(255,255,255,0.08);
+    font-family:"K2D", sans-serif;
+}
+
+.shop-row.active-row .star-btn{
+    color:#d91f26;
+    border-right:1px solid rgba(0,0,0,0.06);
+}
+
+.star-btn:hover{
+    background:rgba(255,255,255,0.06);
+}
+
+.star-btn.locked-star{
+    color:#ffffff;
+    cursor:default;
+}
+
+.shop-btn{
+    flex:1;
+    height:48px;
+    border:none;
+    background:transparent;
+    color:#ffffff;
+    text-align:left;
+    padding:0 14px;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    font-family:"K2D", sans-serif;
+}
+
+.shop-btn:hover{
+    background:rgba(255,255,255,0.05);
+}
+
+.shop-row.active-row .shop-btn{
+    color:#d91f26;
+    background:transparent;
+}
+
+.shop-btn.locked-btn{
+    color:#ffffff;
+}
+
+.shop-row.active-row .shop-btn.locked-btn{
+    color:#d91f26;
+}
+
+.main{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:18px 24px 24px 18px;
+    overflow:auto;
+    min-width:0;
+}
+
+.main-wrap{
+    width:100%;
+    max-width:980px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:24px;
+    padding-right:8px;
+}
+
+.container,
+.bonus-container{
+    margin-top:8px;
+    background:#f2f2f2;
+    padding:28px 28px 24px;
+    border-radius:30px;
+    text-align:center;
+    box-shadow:0 20px 40px rgba(0,0,0,0.28);
+    color:#111;
+    position:relative;
+    overflow:hidden;
+}
+
+.container{
+    width:460px;
+    max-width:100%;
+    flex-shrink:0;
+}
+
+.bonus-container{
+    width:360px;
+    max-width:100%;
+    flex-shrink:0;
+}
+
+.container::before,
+.bonus-container::before{
+    content:"";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:300px;
+    height:180px;
+    background:url("{{ url_for('static', filename='images/pg-logo.png') }}") no-repeat center;
+    background-size:contain;
+    opacity:0.06;
+    pointer-events:none;
+}
+
+h1{
+    font-size:36px;
+    margin:0 0 16px 0;
+    font-weight:900;
+    color:#000;
+}
+
+.sub-title{
+    font-size:18px;
+    color:#222;
+    margin-bottom:14px;
+    font-weight:800;
+}
+
+.percent-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.percent-card{
+    min-height:132px;
+    border-radius:24px;
+    padding:16px 14px;
+    background:linear-gradient(180deg,#173d7a,#0b244d);
+    border:2px solid #4f79c8;
+    box-shadow:
+        0 10px 18px rgba(0,0,0,0.35),
+        inset 0 2px 4px rgba(255,255,255,0.08);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.percent-card .label{
+    font-size:16px;
+    font-weight:800;
+    color:#ffffff;
+    margin-bottom:10px;
+    line-height:1.2;
+}
+
+.percent-card .value{
+    font-family:"K2D", sans-serif;
+    font-size:42px;
+    font-weight:800;
+    color:#ffffff;
+    line-height:1;
+}
+
+.player-count{
+    margin:12px 0 8px;
+    font-size:15px;
+    color:#555;
+    font-weight:800;
+}
+
+.player-bar-wrap{
+    width:100%;
+    height:18px;
+    background:#d9d9d9;
+    border-radius:999px;
+    overflow:hidden;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.12);
+    margin-bottom:14px;
+}
+
+.player-bar{
+    height:100%;
+    width:50%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#ffb000,#9ac43c,#11c38b);
+    transition:width .25s ease;
+}
+
+.game-name,
+.bonus-name{
+    font-size:16px;
+    margin:12px 0 16px 0;
+    color:#111;
+    word-break:break-word;
+    font-weight:700;
+    min-height:24px;
+}
+
+#gameImage,
+#bonusImage{
+    width:300px;
+    max-width:100%;
+    border-radius:22px;
+    box-shadow:0 12px 25px rgba(0,0,0,0.25);
+    margin-top:4px;
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
+    background:#eee;
+}
+
+.button-group,
+.bonus-button-group{
+    margin-top:24px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.refresh-btn,
+.bonus-refresh-btn{
+    padding:14px 24px;
+    border:none;
+    border-radius:14px;
+    background:#1677ff;
+    color:white;
+    font-size:18px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(22,119,255,0.25);
+    font-family:"K2D", sans-serif;
+}
+
+.refresh-btn:hover,
+.bonus-refresh-btn:hover{
+    background:#0f63d6;
+}
+
+.copy-btn,
+.bonus-copy-btn{
+    padding:14px 24px;
+    border:none;
+    border-radius:14px;
+    background:#28a745;
+    color:white;
+    font-size:18px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(40,167,69,0.25);
+    font-family:"K2D", sans-serif;
+}
+
+.copy-btn:hover,
+.bonus-copy-btn:hover{
+    background:#218838;
+}
+
+.lock-text{
+    margin-top:10px;
+    color:#444;
+    font-size:14px;
+    font-weight:700;
+}
+
+.bonus-error{
+    margin-top:10px;
+    color:#d91f26;
+    font-size:13px;
+    font-weight:800;
+    min-height:18px;
+}
+
+.right-panel{
+    width:300px;
+    min-height:100vh;
+    background:linear-gradient(180deg,#0d214f 0%, #0a1635 100%);
+    box-shadow:-8px 0 24px rgba(0,0,0,0.28);
+    flex-shrink:0;
+    border-left:1px solid rgba(255,255,255,0.06);
+    overflow:auto;
+}
+
+.right-header{
+    color:#ffffff;
+    text-align:center;
+    font-size:22px;
+    font-weight:800;
+    padding:24px 12px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.search-wrap{
+    padding:12px 12px 0;
+    display:flex;
+    gap:8px;
+}
+
+.search-input{
+    flex:1;
+    height:42px;
+    border:none;
+    outline:none;
+    border-radius:14px;
+    padding:0 14px;
+    font-size:14px;
+    font-weight:700;
+    color:#0d214f;
+    background:#eef4ff;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.12);
+    font-family:"K2D", sans-serif;
+}
+
+.search-input::placeholder{
+    color:#5d6d92;
+}
+
+.search-btn{
+    height:42px;
+    border:none;
+    border-radius:14px;
+    padding:0 16px;
+    background:#1677ff;
+    color:#fff;
+    font-size:14px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(22,119,255,0.25);
+    white-space:nowrap;
+    font-family:"K2D", sans-serif;
+}
+
+.search-btn:hover{
+    background:#0f63d6;
+}
+
+#gameList{
+    padding:14px 10px 20px;
+}
+
+.game-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:16px;
+    background:linear-gradient(180deg,#18356f,#11295a);
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.22),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.05);
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.game-item:hover{
+    background:linear-gradient(180deg,#1d428b,#15346c);
+    transform:translateY(-1px);
+}
+
+.game-item.active{
+    background:#ffffff;
+    border:1px solid rgba(255,255,255,0.65);
+}
+
+.game-thumb{
+    width:48px;
+    height:64px;
+    object-fit:cover;
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,0.4);
+    flex-shrink:0;
+    background:#d9d9d9;
+}
+
+.game-item.active .game-thumb{
+    border-color:#1c3670;
+}
+
+.game-info{
+    flex:1;
+    min-width:0;
+}
+
+.game-title{
+    font-size:14px;
+    font-weight:800;
+    color:#ffffff;
+    line-height:1.25;
+    word-break:break-word;
+}
+
+.game-item.active .game-title{
+    color:#d91f26;
+}
+
+.game-actions{
+    margin-top:8px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.select-game-btn{
+    border:none;
+    border-radius:10px;
+    padding:7px 12px;
+    background:#28a745;
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(40,167,69,0.22);
+    font-family:"K2D", sans-serif;
+}
+
+.select-game-btn:hover{
+    background:#218838;
+}
+
+.empty-search{
+    text-align:center;
+    color:#cfd8f3;
+    font-size:14px;
+    font-weight:700;
+    padding:20px 10px;
+}
+
+@media (max-width: 1400px){
+    .main{
+        justify-content:flex-start;
+    }
+
+    .main-wrap{
+        justify-content:flex-start;
+    }
+}
+
+@media (max-width: 1200px){
+    body{
+        display:grid;
+        grid-template-columns:230px 1fr;
+        grid-template-areas:
+            "sidebar main"
+            "sidebar right";
+    }
+
+    .sidebar{
+        grid-area:sidebar;
+        min-height:100vh;
+        width:230px;
+    }
+
+    .main{
+        grid-area:main;
+        width:100%;
+    }
+
+    .main-wrap{
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+    }
+
+    .right-panel{
+        grid-area:right;
+        width:100%;
+        min-height:auto;
+        border-left:none;
+        border-top:1px solid rgba(255,255,255,0.06);
+        box-shadow:none;
+        background:linear-gradient(180deg,#102754 0%, #0a1635 100%);
+    }
+}
+
+@media (max-width: 900px){
+    body{
+        display:flex;
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+        min-height:auto;
+        border-right:none;
+        border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+
+    .main{
+        width:100%;
+        padding-top:10px;
+        padding-left:12px;
+        padding-right:12px;
+        justify-content:center;
+    }
+
+    .main-wrap{
+        width:100%;
+        align-items:center;
+    }
+
+    .container,
+    .bonus-container{
+        width:100%;
+        max-width:520px;
+        margin-left:auto;
+        margin-right:auto;
+    }
+
+    .right-panel{
+        width:100%;
+        min-height:auto;
+        border-left:none;
+        border-top:1px solid rgba(255,255,255,0.06);
+    }
+
+    .top-user-bar{
+        position:static;
+        margin:12px;
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+}
+
+@media (max-width: 560px){
+    h1{
+        font-size:30px;
+    }
+
+    .container,
+    .bonus-container{
+        padding:22px 16px 20px;
+        border-radius:22px;
+    }
+
+    .percent-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .percent-card{
+        min-height:110px;
+        border-radius:20px;
+    }
+
+    .percent-card .value{
+        font-size:36px;
+    }
+
+    #gameImage,
+    #bonusImage{
+        width:100%;
+        max-width:300px;
+    }
+
+    .search-wrap{
+        flex-direction:column;
+    }
+
+    .search-btn{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-user-bar">
+    <div class="user-name">ผู้ใช้: {{ username }}</div>
+    <a href="{{ url_for('logout') }}" class="logout-btn">ออกจากระบบ</a>
+</div>
+
+<div class="sidebar">
+    <div class="sidebar-header">WEB RIS</div>
+    <div id="shopList"></div>
+</div>
+
+<div class="main">
+    <div class="main-wrap">
+        <div class="container">
+            <h1 id="shopTitle">PG SOFT</h1>
+
+            <div class="sub-title">สถิติจากลูกค้าเล่นจริง</div>
+
+            <div class="percent-grid">
+                <div class="percent-card">
+                    <div class="label">โอกาสชนะ</div>
+                    <div class="value" id="winPercentText">95%</div>
+                </div>
+
+                <div class="percent-card">
+                    <div class="label">โอกาสเข้าฟรี</div>
+                    <div class="value" id="freePercentText">20%</div>
+                </div>
+            </div>
+
+            <div class="player-count" id="playerCountText">จำนวนผู้เล่นจริง 500 คน</div>
+            <div class="player-bar-wrap">
+                <div class="player-bar" id="playerBar"></div>
+            </div>
+
+            <div class="game-name" id="gameName">{{ image }}</div>
+
+            <img id="gameImage" src="{{ url_for('static', filename='images/' + image) }}" alt="random image">
+
+            <div class="button-group">
+                <button class="refresh-btn" onclick="randomGame()">สุ่มใหม่</button>
+                <button class="copy-btn" onclick="copyStyledCard()">คัดลอก</button>
+            </div>
+
+            <div class="lock-text">เลือกเว็บด้านซ้าย หรือค้นหาเกมทางด้านขวา</div>
+        </div>
+
+        <div class="bonus-container">
+            <h1>โบนัสไทม์</h1>
+
+            <div class="sub-title">สุ่มเฉพาะรูปโบนัสพิเศษ</div>
+
+            <div class="bonus-name" id="bonusName">bonus-time</div>
+
+            <img id="bonusImage" src="" alt="bonus image">
+
+            <div class="bonus-button-group">
+                <button class="bonus-refresh-btn" onclick="randomBonusImage()">สุ่มโบนัสไทม์</button>
+                <button class="bonus-copy-btn" onclick="copyBonusPoster()">คัดลอกรูปโบนัส</button>
+            </div>
+
+            <div class="bonus-error" id="bonusError"></div>
+        </div>
+    </div>
+</div>
+
+<div class="right-panel" id="rightPanel">
+    <div class="right-header">เลือกเกม / รูป</div>
+    <div class="search-wrap">
+        <input
+            type="text"
+            id="gameSearchInput"
+            class="search-input"
+            placeholder="ค้นหาเกม..."
+            oninput="renderGameList()"
+            onkeydown="handleSearchEnter(event)"
+        >
+        <button class="search-btn" onclick="searchAndSelectGame()">ค้นหา</button>
+    </div>
+    <div id="gameList"></div>
+</div>
+
+<script>
+const lockedShop = "PG SOFT";
+const IMAGE_BASE_URL = "/static/images/";
+const BONUS_COPY_IMAGE = "/static/images/bonus-copy.png";
+
+const allImages = {{ images | tojson }};
+const initialImage = {{ image | tojson }};
+
+const bonusImages = allImages.filter(filename => {
+    const lower = String(filename).toLowerCase();
+    return lower.startsWith("bonus-time");
+});
+
+const gameImages = allImages.filter(filename => {
+    const lower = String(filename).toLowerCase();
+    return !lower.startsWith("bonus-time");
+});
+
+const shops = [
+    "SOZA","SNOK","ZOCOOL","FIWFUN","MAFINX","OPPA","MEGARICH88","MAXMO",
+    "FULLHOUSE88","JOKERFUN88","LOVING88","LUCKYKID168","PLAYBOY55",
+    "MOOWHAN","LUCKYKUB","SAMURAI","MOODENG","LAVIA","SPDD"
+];
+
+let selectedShop = lockedShop;
+let selectedGame = initialImage;
+let selectedBonus = bonusImages.length > 0 ? bonusImages[0] : "";
+let winPercent = 95;
+let freePercent = 20;
+let playerCount = 500;
+let latestBigPrize = 50000;
+
+function randomBetween(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function weightedRandom(ranges){
+    const totalWeight = ranges.reduce((sum, item) => sum + item.weight, 0);
+    let random = Math.random() * totalWeight;
+
+    for (const item of ranges) {
+        random -= item.weight;
+        if (random <= 0) {
+            return randomBetween(item.min, item.max);
+        }
+    }
+    return randomBetween(ranges[0].min, ranges[0].max);
+}
+
+function generateRealisticStats(){
+    let players = weightedRandom([
+        { min: 420, max: 610, weight: 60 },
+        { min: 300, max: 419, weight: 20 },
+        { min: 611, max: 700, weight: 20 }
+    ]);
+
+    let win = weightedRandom([
+        { min: 86, max: 91, weight: 60 },
+        { min: 80, max: 85, weight: 25 },
+        { min: 92, max: 95, weight: 15 }
+    ]);
+
+    let free = weightedRandom([
+        { min: 18, max: 24, weight: 55 },
+        { min: 15, max: 17, weight: 25 },
+        { min: 25, max: 30, weight: 20 }
+    ]);
+
+    let prize = weightedRandom([
+        { min: 10000, max: 25000, weight: 25 },
+        { min: 26000, max: 60000, weight: 50 },
+        { min: 61000, max: 100000, weight: 25 }
+    ]);
+
+    if (players >= 620) {
+        win = Math.max(80, win - randomBetween(1, 3));
+        free = Math.max(15, free - randomBetween(0, 2));
+    } else if (players <= 380) {
+        win = Math.min(95, win + randomBetween(1, 2));
+        free = Math.min(30, free + randomBetween(0, 2));
+    }
+
+    return { players, win, free, prize };
+}
+
+function getFavorites(){
+    return JSON.parse(localStorage.getItem("favoriteShops") || "[]");
+}
+
+function saveFavorites(favs){
+    localStorage.setItem("favoriteShops", JSON.stringify(favs));
+}
+
+function toggleFavorite(shop){
+    if (shop === lockedShop) return;
+
+    let favs = getFavorites();
+
+    if (favs.includes(shop)) {
+        favs = favs.filter(s => s !== shop);
+    } else {
+        favs.push(shop);
+    }
+
+    saveFavorites(favs);
+    renderShopList();
+}
+
+function createGroupTitle(text){
+    const div = document.createElement("div");
+    div.className = "shop-group-title";
+    div.innerText = text;
+    return div;
+}
+
+function createDivider(text = "คั่นรายการ"){
+    const div = document.createElement("div");
+    div.className = "shop-divider";
+    div.innerHTML = `<span>${text}</span>`;
+    return div;
+}
+
+function createShopRow(shop, isLocked = false, isFavorite = false){
+    const row = document.createElement("div");
+    row.className = "shop-row";
+    if (selectedShop === shop) {
+        row.classList.add("active-row");
+    }
+    if (isLocked) {
+        row.classList.add("locked-row");
+    }
+
+    const star = document.createElement("button");
+    star.className = "star-btn";
+    if (isLocked) {
+        star.classList.add("locked-star");
+        star.innerHTML = "🔒";
+        star.title = "เว็บล็อคไว้บนสุด";
+    } else {
+        star.innerHTML = isFavorite ? "★" : "☆";
+        star.title = isFavorite ? "เอาออกจากรายการติดดาว" : "เพิ่มในรายการติดดาว";
+        star.onclick = (e) => {
+            e.stopPropagation();
+            toggleFavorite(shop);
+        };
+    }
+
+    const btn = document.createElement("button");
+    btn.className = "shop-btn";
+    if (isLocked) {
+        btn.classList.add("locked-btn");
+    }
+    btn.innerText = shop;
+    btn.onclick = () => {
+        selectedShop = shop;
+        document.getElementById("shopTitle").innerText = shop;
+        renderShopList();
+    };
+
+    row.appendChild(star);
+    row.appendChild(btn);
+    return row;
+}
+
+function renderShopList(){
+    const shopList = document.getElementById("shopList");
+    const favs = getFavorites().filter(shop => shop !== lockedShop);
+
+    const favoriteShops = shops.filter(shop => favs.includes(shop));
+    const normalShops = shops.filter(shop => !favs.includes(shop));
+
+    shopList.innerHTML = "";
+
+    shopList.appendChild(createGroupTitle("เว็บล็อคบนสุด"));
+    shopList.appendChild(createShopRow(lockedShop, true, false));
+
+    if (favoriteShops.length > 0) {
+        shopList.appendChild(createDivider("รายการติดดาว"));
+        shopList.appendChild(createGroupTitle("ติดดาวแล้ว"));
+        favoriteShops.forEach(shop => {
+            shopList.appendChild(createShopRow(shop, false, true));
+        });
+    }
+
+    if (normalShops.length > 0) {
+        shopList.appendChild(createDivider(favoriteShops.length > 0 ? "รายการทั่วไป" : "เว็บทั้งหมด"));
+        shopList.appendChild(createGroupTitle("ยังไม่ได้ติดดาว"));
+        normalShops.forEach(shop => {
+            shopList.appendChild(createShopRow(shop, false, false));
+        });
+    }
+}
+
+function decodeHtmlEntities(text){
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
+function formatGameName(filename) {
+    let name = decodeHtmlEntities(filename);
+    name = name.replace(/\.[^/.]+$/, "");
+    name = name.replace(/^PGS_/i, "");
+    name = name.replace(/_\d+$/, "");
+    name = name.replace(/_/g, " ");
+    return name.trim();
+}
+
+function formatBonusName(filename){
+    let name = decodeHtmlEntities(filename);
+    name = name.replace(/\.[^/.]+$/, "");
+    return name.trim();
+}
+
+function formatThaiDate() {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yy = String((now.getFullYear() + 543) % 100).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+}
+
+function formatMoney(number){
+    return Number(number).toLocaleString("th-TH");
+}
+
+function scrollSelectedGameIntoView(){
+    const gameList = document.getElementById("gameList");
+    if (!gameList) return;
+
+    const activeItem = gameList.querySelector(".game-item.active");
+    if (activeItem) {
+        activeItem.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "nearest"
+        });
+    }
+}
+
+function updatePercentDisplay(newWinPercent, newFreePercent){
+    winPercent = newWinPercent;
+    freePercent = newFreePercent;
+
+    document.getElementById("winPercentText").innerText = `${winPercent}%`;
+    document.getElementById("freePercentText").innerText = `${freePercent}%`;
+}
+
+function updatePlayerBar(newPlayerCount){
+    playerCount = newPlayerCount;
+
+    document.getElementById("playerCountText").innerText = `จำนวนผู้เล่นจริง ${playerCount} คน`;
+
+    const minPlayers = 300;
+    const maxPlayers = 700;
+    const ratio = (playerCount - minPlayers) / (maxPlayers - minPlayers);
+    const widthPercent = Math.max(8, Math.min(100, ratio * 100));
+
+    document.getElementById("playerBar").style.width = `${widthPercent}%`;
+}
+
+function getStaticUrl(filename){
+    return IMAGE_BASE_URL + encodeURIComponent(filename);
+}
+
+function applyGameSelection(game, shouldScroll = true){
+    selectedGame = game;
+
+    const gameImage = document.getElementById("gameImage");
+    gameImage.src = getStaticUrl(game);
+    gameImage.alt = formatGameName(game);
+    document.getElementById("gameName").innerText = formatGameName(game);
+
+    const stats = generateRealisticStats();
+    latestBigPrize = stats.prize;
+    updatePercentDisplay(stats.win, stats.free);
+    updatePlayerBar(stats.players);
+
+    renderGameList();
+
+    if (shouldScroll) {
+        setTimeout(scrollSelectedGameIntoView, 50);
+    }
+}
+
+function setBonusImage(filename){
+    const bonusImage = document.getElementById("bonusImage");
+    const bonusName = document.getElementById("bonusName");
+    const bonusError = document.getElementById("bonusError");
+
+    selectedBonus = filename || "";
+    bonusError.innerText = "";
+
+    if (!selectedBonus) {
+        bonusImage.src = "";
+        bonusImage.alt = "bonus image";
+        bonusName.innerText = "ไม่พบรูปโบนัส";
+        bonusError.innerText = "ไม่พบรูปที่ขึ้นต้นด้วย bonus-time ใน static/images";
+        return;
+    }
+
+    bonusImage.src = getStaticUrl(selectedBonus);
+    bonusImage.alt = formatBonusName(selectedBonus);
+    bonusName.innerText = formatBonusName(selectedBonus);
+}
+
+function randomBonusImage(){
+    if (bonusImages.length === 0) {
+        setBonusImage("");
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * bonusImages.length);
+    const bonus = bonusImages[randomIndex];
+    setBonusImage(bonus);
+}
+
+function canCopyImages(){
+    return !!(navigator.clipboard && window.ClipboardItem);
+}
+
+async function copyBlobToClipboard(blob, successText, failText){
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                [blob.type || "image/png"]: blob
+            })
+        ]);
+        alert(successText);
+    } catch (err) {
+        console.error(err);
+        alert(failText);
+    }
+}
+
+async function blobFromImageElement(imgEl){
+    return new Promise((resolve, reject) => {
+        if (!imgEl.complete || imgEl.naturalWidth === 0) {
+            reject(new Error("Image not loaded"));
+            return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = imgEl.naturalWidth;
+        canvas.height = imgEl.naturalHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(imgEl, 0, 0);
+
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error("Canvas toBlob failed"));
+                return;
+            }
+            resolve(blob);
+        }, "image/png");
+    });
+}
+
+async function tryLoadImageAsBlob(url){
+    try {
+        const response = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) {
+            return null;
+        }
+        return await response.blob();
+    } catch (error) {
+        return null;
+    }
+}
+
+async function copyBonusPoster(){
+    if (!canCopyImages()) {
+        alert("คัดลอกรูปโบนัสไม่สำเร็จ เบราว์เซอร์อาจไม่รองรับ");
+        return;
+    }
+
+    const bonusImageEl = document.getElementById("bonusImage");
+
+    try {
+        const posterBlob = await tryLoadImageAsBlob(BONUS_COPY_IMAGE);
+
+        if (posterBlob) {
+            await copyBlobToClipboard(
+                posterBlob,
+                "คัดลอกรูปโบนัสแล้ว",
+                "คัดลอกรูปโบนัสไม่สำเร็จ"
+            );
+            return;
+        }
+
+        const currentBonusBlob = await blobFromImageElement(bonusImageEl);
+        await copyBlobToClipboard(
+            currentBonusBlob,
+            "คัดลอกรูปโบนัสที่แสดงอยู่แล้ว",
+            "คัดลอกรูปโบนัสไม่สำเร็จ"
+        );
+    } catch (error) {
+        console.error(error);
+        alert("คัดลอกรูปโบนัสไม่สำเร็จ");
+    }
+}
+
+function renderGameList(){
+    const gameList = document.getElementById("gameList");
+    const searchInput = document.getElementById("gameSearchInput");
+    if (!gameList) return;
+
+    const keyword = (searchInput?.value || "").trim().toLowerCase();
+
+    const filteredGames = gameImages.filter(game => {
+        return formatGameName(game).toLowerCase().includes(keyword);
+    });
+
+    gameList.innerHTML = "";
+
+    if (filteredGames.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-search";
+        empty.innerText = "ไม่พบเกมที่ค้นหา";
+        gameList.appendChild(empty);
+        return;
+    }
+
+    filteredGames.forEach(game => {
+        const item = document.createElement("div");
+        item.className = "game-item";
+        if (selectedGame === game) {
+            item.classList.add("active");
+        }
+
+        const thumb = document.createElement("img");
+        thumb.className = "game-thumb";
+        thumb.src = getStaticUrl(game);
+        thumb.alt = formatGameName(game);
+
+        thumb.onerror = function(){
+            this.src = "";
+        };
+
+        const info = document.createElement("div");
+        info.className = "game-info";
+
+        const title = document.createElement("div");
+        title.className = "game-title";
+        title.innerText = formatGameName(game);
+
+        const actions = document.createElement("div");
+        actions.className = "game-actions";
+
+        const selectBtn = document.createElement("button");
+        selectBtn.className = "select-game-btn";
+        selectBtn.innerText = "เลือกเกม";
+        selectBtn.onclick = (e) => {
+            e.stopPropagation();
+            applyGameSelection(game, true);
+        };
+
+        actions.appendChild(selectBtn);
+        info.appendChild(title);
+        info.appendChild(actions);
+
+        item.onclick = () => {
+            applyGameSelection(game, true);
+        };
+
+        item.appendChild(thumb);
+        item.appendChild(info);
+        gameList.appendChild(item);
+    });
+}
+
+function searchAndSelectGame(){
+    const searchInput = document.getElementById("gameSearchInput");
+    const keyword = (searchInput?.value || "").trim().toLowerCase();
+
+    renderGameList();
+
+    if (!keyword) return;
+
+    const matchedGame = gameImages.find(game =>
+        formatGameName(game).toLowerCase().includes(keyword)
+    );
+
+    if (matchedGame) {
+        applyGameSelection(matchedGame, true);
+    }
+}
+
+function handleSearchEnter(event){
+    if (event.key === "Enter") {
+        searchAndSelectGame();
+    }
+}
+
+function randomGame(){
+    if (gameImages.length === 0) return;
+
+    const randomIndex = Math.floor(Math.random() * gameImages.length);
+    const game = gameImages[randomIndex];
+
+    const searchInput = document.getElementById("gameSearchInput");
+    if (searchInput) {
+        searchInput.value = "";
+    }
+
+    applyGameSelection(game, false);
+}
+
+function drawRoundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function fitText(ctx, text, maxWidth, startSize, weight="bold", family="Arial") {
+    let size = startSize;
+    while (size > 12) {
+        ctx.font = `${weight} ${size}px ${family}`;
+        if (ctx.measureText(text).width <= maxWidth) return size;
+        size--;
+    }
+    return size;
+}
+
+async function copyStyledCard() {
+    try {
+        const img = document.getElementById("gameImage");
+        const shop = document.getElementById("shopTitle").innerText;
+        const rawGame = document.getElementById("gameName").innerText;
+        const game = formatGameName(rawGame);
+        const updateTime = formatThaiDate();
+
+        if (!img.complete || img.naturalWidth === 0) {
+            alert("รูปยังโหลดไม่เสร็จ กรุณาลองใหม่");
+            return;
+        }
+
+        const winPercentValue = document.getElementById("winPercentText").innerText.replace("%", "");
+        const freePercentValue = document.getElementById("freePercentText").innerText.replace("%", "");
+        const prizeValue = formatMoney(latestBigPrize);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 1500;
+        canvas.height = 760;
+        const ctx = canvas.getContext("2d");
+
+        const bg = ctx.createLinearGradient(0, 0, 0, 760);
+        bg.addColorStop(0, "#123a7a");
+        bg.addColorStop(1, "#081c40");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 1500, 760);
+
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 12;
+        drawRoundRect(ctx, 34, 34, 1432, 662, 48);
+        ctx.fillStyle = "#214b93";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        drawRoundRect(ctx, 48, 48, 1404, 634, 38);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.stroke();
+
+        const headerGrad = ctx.createLinearGradient(60, 60, 700, 140);
+        headerGrad.addColorStop(0, "#163a7b");
+        headerGrad.addColorStop(1, "#0a1c46");
+
+        ctx.fillStyle = headerGrad;
+        drawRoundRect(ctx, 68, 78, 660, 92, 22);
+        ctx.fill();
+
+        drawRoundRect(ctx, 68, 78, 660, 92, 22);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.14)";
+        ctx.stroke();
+
+        ctx.shadowColor = "rgba(0,0,0,0.30)";
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = "#ffffff";
+        let titleSize = fitText(ctx, shop, 600, 62);
+        ctx.font = `bold ${titleSize}px Arial`;
+        ctx.textAlign = "left";
+        ctx.fillText(shop, 92, 138);
+        ctx.shadowBlur = 0;
+
+        const updateGrad = ctx.createLinearGradient(0, 78, 0, 190);
+        updateGrad.addColorStop(0, "#17376d");
+        updateGrad.addColorStop(1, "#09173d");
+
+        ctx.fillStyle = updateGrad;
+        drawRoundRect(ctx, 820, 78, 310, 112, 18);
+        ctx.fill();
+
+        drawRoundRect(ctx, 820, 78, 310, 112, 18);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.stroke();
+
+        ctx.shadowColor = "rgba(0,0,0,0.28)";
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = "#dfeaff";
+        ctx.font = "bold 28px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("อัปเดตล่าสุด", 975, 122);
+        ctx.font = "bold 34px Arial";
+        ctx.fillText(updateTime, 975, 164);
+        ctx.shadowBlur = 0;
+
+        function drawStatBox(x, y, w, h, label, value, valueSize = 58, labelSize = 28){
+            ctx.save();
+            ctx.shadowColor = "rgba(0,0,0,0.18)";
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetY = 8;
+
+            const statGrad = ctx.createLinearGradient(0, y, 0, y + h);
+            statGrad.addColorStop(0, "#173d7a");
+            statGrad.addColorStop(1, "#0b244d");
+            ctx.fillStyle = statGrad;
+            drawRoundRect(ctx, x, y, w, h, 28);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+            drawRoundRect(ctx, x, y, w, h, 28);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#4f79c8";
+            ctx.stroke();
+
+            ctx.shadowColor = "rgba(0,0,0,0.26)";
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetY = 4;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = `bold ${labelSize}px Arial`;
+
+            if (label === "รางวัลใหญ่ล่าสุดจากผู้เล่น") {
+                ctx.fillText("รางวัลใหญ่ล่าสุด", x + w / 2, y + 48);
+                ctx.fillText("จากผู้เล่น", x + w / 2, y + 82);
+                ctx.font = `800 ${valueSize}px K2D`;
+                ctx.fillText(value, x + w / 2, y + h - 46);
+            } else {
+                ctx.fillText(label, x + w / 2, y + 58);
+                ctx.font = `800 ${valueSize}px K2D`;
+                ctx.fillText(value, x + w / 2, y + h - 52);
+            }
+
+            ctx.textBaseline = "alphabetic";
+            ctx.restore();
+        }
+
+        const statY = 228;
+        const statH = 180;
+        const statGap = 26;
+        const statStartX = 150;
+
+        const statW1 = 250;
+        const statW2 = 250;
+        const statW3 = 340;
+
+        drawStatBox(statStartX, statY, statW1, statH, "โอกาสชนะ", `${winPercentValue}%`, 60, 28);
+        drawStatBox(statStartX + statW1 + statGap, statY, statW2, statH, "โอกาสเข้าฟรี", `${freePercentValue}%`, 60, 28);
+        drawStatBox(statStartX + statW1 + statGap + statW2 + statGap, statY, statW3, statH, "รางวัลใหญ่ล่าสุดจากผู้เล่น", `${prizeValue}`, 42, 28);
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(170,210,255,0.35)";
+        ctx.lineWidth = 4;
+        ctx.moveTo(132, 182);
+        ctx.bezierCurveTo(18, 315, 30, 520, 180, 590);
+        ctx.stroke();
+
+        ctx.shadowColor = "rgba(0,0,0,0.26)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = "#eaf2ff";
+        ctx.font = "bold 32px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText("สถิติจากลูกค้าเล่นจริง", 92, 510);
+        ctx.shadowBlur = 0;
+
+        const barX = 90;
+        const barY = 540;
+        const barW = 930;
+        const barH = 82;
+
+        const barBaseGrad = ctx.createLinearGradient(0, barY, 0, barY + barH);
+        barBaseGrad.addColorStop(0, "#dce7f7");
+        barBaseGrad.addColorStop(1, "#bfcde2");
+        ctx.fillStyle = barBaseGrad;
+        drawRoundRect(ctx, barX, barY, barW, barH, 36);
+        ctx.fill();
+
+        drawRoundRect(ctx, barX, barY, barW, barH, 36);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#6c7484";
+        ctx.stroke();
+
+        const minPlayers = 300;
+        const maxPlayers = 700;
+        const playerRatio = (playerCount - minPlayers) / (maxPlayers - minPlayers);
+        const fillW = Math.max(110, Math.min(barW - 10, (barW - 10) * playerRatio));
+
+        const liveGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+        liveGrad.addColorStop(0, "#ffb000");
+        liveGrad.addColorStop(0.5, "#a8cb31");
+        liveGrad.addColorStop(1, "#69d24c");
+
+        ctx.fillStyle = liveGrad;
+        drawRoundRect(ctx, barX + 5, barY + 5, fillW, barH - 10, 30);
+        ctx.fill();
+
+        ctx.fillStyle = "#101822";
+        ctx.font = "700 28px K2D";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`จำนวนคนเล่นจริง ${playerCount} คน`, barX + 28, barY + barH / 2 + 1);
+        ctx.textBaseline = "alphabetic";
+
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = 22;
+        ctx.shadowOffsetY = 12;
+
+        drawRoundRect(ctx, 1110, 24, 294, 410, 26);
+        ctx.save();
+        ctx.clip();
+        ctx.drawImage(img, 1110, 24, 294, 410);
+        ctx.restore();
+
+        ctx.shadowBlur = 0;
+
+        drawRoundRect(ctx, 1110, 24, 294, 410, 26);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+
+        const gameGrad = ctx.createLinearGradient(0, 520, 0, 602);
+        gameGrad.addColorStop(0, "#173b7d");
+        gameGrad.addColorStop(1, "#0b1c47");
+
+        ctx.fillStyle = gameGrad;
+        drawRoundRect(ctx, 1060, 528, 360, 82, 16);
+        ctx.fill();
+
+        drawRoundRect(ctx, 1060, 528, 360, 82, 16);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.stroke();
+
+        ctx.shadowColor = "rgba(0,0,0,0.28)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 32px Arial";
+        ctx.textAlign = "center";
+
+        let gameShow = game;
+        while (ctx.measureText(gameShow).width > 310 && gameShow.length > 0) {
+            gameShow = gameShow.slice(0, -1);
+        }
+        if (gameShow !== game) {
+            gameShow += "...";
+        }
+
+        ctx.fillText(gameShow, 1240, 580);
+
+        canvas.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        "image/png": blob
+                    })
+                ]);
+                alert("คัดลอกรูปแล้ว");
+            } catch (err) {
+                console.error(err);
+                alert("คัดลอกรูปไม่สำเร็จ เบราว์เซอร์อาจไม่รองรับ");
+            }
+        }, "image/png");
+
+    } catch (error) {
+        console.error(error);
+        alert("คัดลอกรูปไม่สำเร็จ");
+    }
+}
+
+window.onload = function(){
+    renderShopList();
+    document.getElementById("shopTitle").innerText = selectedShop;
+
+    const bonusImage = document.getElementById("bonusImage");
+    const bonusError = document.getElementById("bonusError");
+
+    bonusImage.onerror = function(){
+        bonusError.innerText = "ไม่พบรูปโบนัสใน static/images";
+    };
+
+    if (gameImages.length > 0) {
+        if (!gameImages.includes(selectedGame)) {
+            selectedGame = gameImages[0];
+        }
+        applyGameSelection(selectedGame, false);
+    } else {
+        renderGameList();
+    }
+
+    if (bonusImages.length > 0) {
+        randomBonusImage();
+    } else {
+        setBonusImage("");
+    }
+};
+</script>
+
+</body>
+</html>
