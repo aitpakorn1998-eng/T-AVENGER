@@ -95,7 +95,9 @@ body{
     font-size:13px;
     font-weight:800;
 }
-.logout-btn:hover{background:#b4171d}
+.logout-btn:hover{
+    background:#b4171d;
+}
 
 .flash{
     background:#e8fff0;
@@ -149,6 +151,12 @@ body{
     outline:none;
 }
 
+.input:focus,
+.select:focus{
+    border-color:#7aa7ff;
+    box-shadow:0 0 0 3px rgba(22,119,255,.12);
+}
+
 .btn-row{
     display:flex;
     gap:10px;
@@ -169,12 +177,28 @@ body{
     display:inline-flex;
     align-items:center;
     justify-content:center;
+    transition:.2s ease;
 }
 
-.btn-blue{background:#1677ff}
-.btn-blue:hover{background:#0f63d6}
-.btn-gray{background:#667085}
-.btn-gray:hover{background:#556070}
+.btn-blue{
+    background:#1677ff;
+}
+.btn-blue:hover{
+    background:#0f63d6;
+}
+
+.btn-gray{
+    background:#667085;
+}
+.btn-gray:hover{
+    background:#556070;
+}
+
+.btn-disabled{
+    opacity:.72 !important;
+    cursor:not-allowed !important;
+    pointer-events:none;
+}
 
 .result-box{
     min-height:390px;
@@ -240,6 +264,7 @@ body{
     font-size:15px;
     font-weight:800;
     margin-top:10px;
+    line-height:1.5;
 }
 
 @media (max-width: 1000px){
@@ -252,8 +277,13 @@ body{
     .layout{
         grid-template-columns:1fr;
     }
+
     .info-grid{
         grid-template-columns:1fr;
+    }
+
+    .topbar{
+        justify-content:center;
     }
 }
 </style>
@@ -298,11 +328,9 @@ body{
 
         <div class="main-grid">
             <div class="panel">
-                <div class="sub">
-                    เลือกธนาคารและกรอกเลขบัญชี จากนั้นกดตรวจสอบเพื่อดึงชื่อบัญชีจาก API
-                </div>
+                <div class="sub">เลือกธนาคาร</div>
 
-                <form method="POST">
+                <form method="POST" onsubmit="return lockSubmit(this)">
                     <select class="select" name="bank_name" required>
                         <option value="">เลือกธนาคาร</option>
                         {% for bank in thai_banks %}
@@ -320,7 +348,7 @@ body{
                     >
 
                     <div class="btn-row">
-                        <button class="btn btn-blue" type="submit">ตรวจสอบ</button>
+                        <button class="btn btn-blue" id="submit-check-btn" type="submit">ตรวจสอบ</button>
                         <a href="{{ url_for('transfer_check_page') }}" class="btn btn-gray">ล้างค่า</a>
                     </div>
                 </form>
@@ -362,5 +390,27 @@ body{
         </div>
     </main>
 </div>
+
+<script>
+let checkingNow = false;
+
+function lockSubmit(form) {
+    if (checkingNow) {
+        return false;
+    }
+
+    const btn = form.querySelector('button[type="submit"]');
+    if (!btn) {
+        return true;
+    }
+
+    checkingNow = true;
+    btn.disabled = true;
+    btn.classList.add('btn-disabled');
+    btn.textContent = 'กำลังตรวจสอบ...';
+
+    return true;
+}
+</script>
 </body>
 </html>
